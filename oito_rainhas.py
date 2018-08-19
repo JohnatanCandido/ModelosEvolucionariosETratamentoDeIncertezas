@@ -61,7 +61,7 @@ def encontra_solucao(corte):
         for ind in geracao.populacao:
             if ind.calc_fitness() == 0:
                 return geracao.num, ind, True, geracao.ponto_corte
-        if corte is None or 0 < corte < 8:
+        if corte is None or not 0 < corte < 8:
             corte = int(random() * 8)
         geracao.populacao.sort(key=lambda x: x.calc_fitness())
         nova_geracao = cruzar(copy(geracao.populacao)[:10], corte)
