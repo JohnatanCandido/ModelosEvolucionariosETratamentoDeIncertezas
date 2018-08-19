@@ -7,16 +7,16 @@ master = Tk()
 geracoes = []
 TAM_GERACAO = 20
 QT_GERACOES = 100
-ponto_corte = None
 TOTAL_TENTATIVAS = 0
 TOTAL_MUTACOES = 0
 board = Canvas(master, width=599, height=599)
 
 
 class Geracao:
-    def __init__(self, num, populacao):
+    def __init__(self, num, populacao, ponto_corte):
         self.num = num
         self.populacao = populacao
+        self.ponto_corte = ponto_corte
 
     def busca_melhor_individuo(self):
         melhor = None
@@ -40,28 +40,33 @@ class Tabuleiro:
 
 
 def main():
-    geracao, solucao, encontrou = encontra_solucao()
+    is_fixo = input('Ponto de corte fixo? (s/n) ')
+    corte = None
+    if is_fixo == 's':
+        corte = int(input('Digite o ponto de corte: '))
+    geracao, solucao, encontrou, ponto_corte = encontra_solucao(corte)
     if not encontrou:
         print('### Não encontrado! ###')
-    print(f'Geração: {geracao}, fitness: {solucao.calc_fitness()}')
+    print(f'Geração: {geracao}, fitness: {solucao.calc_fitness()}, ponto de corte: {ponto_corte}')
     print(f'\n\nTOTAL TENTATIVAS: {TOTAL_TENTATIVAS}')
     print(f'TOTAL MUTAÇÕES: {TOTAL_MUTACOES} ({str(TOTAL_MUTACOES/TOTAL_TENTATIVAS*100)[:5]}%)')
     mostrar_solucao(solucao.genotipo)
 
 
-def encontra_solucao():
+def encontra_solucao(corte):
     for i in range(QT_GERACOES):
         if not geracoes:
             geracoes.append(cria_populacao_inicial())
         geracao = geracoes[i]
         for ind in geracao.populacao:
             if ind.calc_fitness() == 0:
-                return geracao.num, ind, True
+                return geracao.num, ind, True, geracao.ponto_corte
+        if corte is None or 0 < corte < 8:
+            corte = int(random() * 8)
         geracao.populacao.sort(key=lambda x: x.calc_fitness())
-        nova_geracao = cruzar(copy(geracao.populacao)[:10])
-        geracoes.append(Geracao(i + 2, nova_geracao))
-    ger, sol, e = busca_melhor_solucao()
-    return ger, sol, e
+        nova_geracao = cruzar(copy(geracao.populacao)[:10], corte)
+        geracoes.append(Geracao(i + 2, nova_geracao, corte))
+    return busca_melhor_solucao()
 
 
 def cria_populacao_inicial():
@@ -75,10 +80,10 @@ def cria_populacao_inicial():
         global TOTAL_TENTATIVAS
         TOTAL_TENTATIVAS += 1
         geracao.append(Tabuleiro(individuo))
-    return Geracao(1, geracao)
+    return Geracao(1, geracao, None)
 
 
-def cruzar(geracao):
+def cruzar(geracao, ponto_corte):
     nao_cruzados = copy(geracao)
     while len(geracao) < TAM_GERACAO:
         i1 = -1
@@ -90,9 +95,6 @@ def cruzar(geracao):
         pai2 = nao_cruzados[i2]
         nao_cruzados.remove(pai1)
         nao_cruzados.remove(pai2)
-        global ponto_corte
-        if ponto_corte is None:
-            ponto_corte = int(random() * 8)
         filho1 = pai1.genotipo[:ponto_corte]
         filho2 = pai2.genotipo[:ponto_corte]
         for j in range(8):
@@ -125,12 +127,12 @@ def busca_melhor_solucao():
     for geracao in geracoes:
         melhor_da_geracao = geracao.busca_melhor_individuo()
         if melhor is None:
-            ger = geracao.num
+            ger = geracao
             melhor = melhor_da_geracao
         elif melhor.calc_fitness() > melhor_da_geracao.calc_fitness():
-            ger = geracao.num
+            ger = geracao
             melhor = melhor_da_geracao
-    return ger, melhor, False
+    return ger.num, melhor, False, ger.ponto_corte
 
 
 board.grid(row=0, column=0)
