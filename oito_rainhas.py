@@ -1,6 +1,7 @@
 from random import random
 from copy import copy
-from tkinter import *
+from tkinter import Tk
+from tkinter import Canvas
 
 master = Tk()
 
