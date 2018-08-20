@@ -51,6 +51,7 @@ def main():
     print(f'\n\nTOTAL TENTATIVAS: {TOTAL_TENTATIVAS}')
     print(f'TOTAL MUTAÇÕES: {TOTAL_MUTACOES} ({str(TOTAL_MUTACOES/TOTAL_TENTATIVAS*100)[:5]}%)')
     mostrar_solucao(solucao.genotipo)
+    return encontrou
 
 
 def encontra_solucao(corte):
@@ -64,7 +65,7 @@ def encontra_solucao(corte):
         if corte is None or not 0 < corte < 8:
             corte = int(random() * 8)
         geracao.populacao.sort(key=lambda x: x.calc_fitness())
-        nova_geracao = cruzar(copy(geracao.populacao)[:10], corte)
+        nova_geracao = cruzar(copy(geracao.populacao)[:10], corte, geracao.num)
         geracoes.append(Geracao(i + 2, nova_geracao, corte))
     return busca_melhor_solucao()
 
@@ -83,7 +84,7 @@ def cria_populacao_inicial():
     return Geracao(1, geracao, None)
 
 
-def cruzar(geracao, ponto_corte):
+def cruzar(geracao, ponto_corte, num_geracao):
     nao_cruzados = copy(geracao)
     while len(geracao) < TAM_GERACAO:
         i1 = -1
@@ -102,16 +103,21 @@ def cruzar(geracao, ponto_corte):
                 filho1.append(pai2.genotipo[j])
             if pai1.genotipo[j] not in filho2 and len(filho2) < 8:
                 filho2.append(pai1.genotipo[j])
-        geracao.append(mutar(Tabuleiro(filho1)))
-        geracao.append(mutar(Tabuleiro(filho2)))
+        geracao.append(mutar(Tabuleiro(filho1), num_geracao))
+        geracao.append(mutar(Tabuleiro(filho2), num_geracao))
     return geracao
 
 
-def mutar(tabuleiro):
+def mutar(tabuleiro, geracao):
     global TOTAL_TENTATIVAS, TOTAL_MUTACOES
     TOTAL_TENTATIVAS += 1
     genotipo = tabuleiro.genotipo
-    if random() > 0.98:
+    chance_mutar = 0.02
+    if 50 < geracao < 75:
+        chance_mutar *= geracao/5
+    elif geracao < 75:
+        chance_mutar *= geracao
+    if random() < chance_mutar:
         TOTAL_MUTACOES += 1
         gene1 = int(random() * 7)
         gene2 = int(random() * 7)
