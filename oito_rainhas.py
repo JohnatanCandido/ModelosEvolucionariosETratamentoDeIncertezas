@@ -8,7 +8,7 @@ master = Tk()
 geracoes = []
 TAM_GERACAO = 20
 QT_GERACOES = 100
-TOTAL_TENTATIVAS = 0
+TOTAL_INDIVIDUOS = 0
 TOTAL_MUTACOES = 0
 board = Canvas(master, width=599, height=599)
 
@@ -41,7 +41,7 @@ class Tabuleiro:
 
 
 def main():
-    is_fixo = input('Ponto de corte fixo? (s/n) ')
+    is_fixo = input('Ponto de corte fixo? (s/n) ').lower()
     corte = None
     if is_fixo == 's':
         corte = int(input('Digite o ponto de corte: '))
@@ -49,8 +49,8 @@ def main():
     if not encontrou:
         print('### Não encontrado! ###')
     print(f'Geração: {geracao}, fitness: {solucao.calc_fitness()}, ponto de corte: {ponto_corte}')
-    print(f'\n\nTOTAL TENTATIVAS: {TOTAL_TENTATIVAS}')
-    print(f'TOTAL MUTAÇÕES: {TOTAL_MUTACOES} ({str(TOTAL_MUTACOES/TOTAL_TENTATIVAS*100)[:5]}%)')
+    print(f'\n\nTOTAL DE INDIVÍDUOS GERADOS: {TOTAL_INDIVIDUOS}')
+    print(f'TOTAL INDIVÍDUOS MUTADOS: {TOTAL_MUTACOES} ({str(TOTAL_MUTACOES/TOTAL_INDIVIDUOS*100)[:5]}%)')
     mostrar_solucao(solucao.genotipo)
     return encontrou
 
@@ -79,8 +79,8 @@ def cria_populacao_inicial():
             linha = int(random() * 8)
             if linha not in individuo:
                 individuo.append(linha)
-        global TOTAL_TENTATIVAS
-        TOTAL_TENTATIVAS += 1
+        global TOTAL_INDIVIDUOS
+        TOTAL_INDIVIDUOS += 1
         geracao.append(Tabuleiro(individuo))
     return Geracao(1, geracao, None)
 
@@ -88,15 +88,8 @@ def cria_populacao_inicial():
 def cruzar(geracao, ponto_corte, num_geracao):
     nao_cruzados = copy(geracao)
     while len(geracao) < TAM_GERACAO:
-        i1 = -1
-        i2 = -1
-        while i1 == i2:
-            i1 = int(random() * len(nao_cruzados))
-            i2 = int(random() * len(nao_cruzados))
-        pai1 = nao_cruzados[i1]
-        pai2 = nao_cruzados[i2]
-        nao_cruzados.remove(pai1)
-        nao_cruzados.remove(pai2)
+        pai1 = nao_cruzados.pop(int(random() * len(nao_cruzados)))
+        pai2 = nao_cruzados.pop(int(random() * len(nao_cruzados)))
         filho1 = pai1.genotipo[:ponto_corte]
         filho2 = pai2.genotipo[:ponto_corte]
         for j in range(8):
@@ -110,8 +103,8 @@ def cruzar(geracao, ponto_corte, num_geracao):
 
 
 def mutar(tabuleiro, geracao):
-    global TOTAL_TENTATIVAS, TOTAL_MUTACOES
-    TOTAL_TENTATIVAS += 1
+    global TOTAL_INDIVIDUOS, TOTAL_MUTACOES
+    TOTAL_INDIVIDUOS += 1
     genotipo = tabuleiro.genotipo
     chance_mutar = 0.02
     if 50 < geracao < 75:
