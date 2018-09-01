@@ -304,7 +304,7 @@ def main():
     print(f'Maior sequência: {melhor_candidato.maior_seq}')
     for linha in melhor_candidato.matriz:
         print(linha)
-    # mostrar_solucao(melhor_candidato.matriz)
+    mostrar_solucao(melhor_candidato.matriz)
 
 
 board = Canvas(master, width=599, height=599)
