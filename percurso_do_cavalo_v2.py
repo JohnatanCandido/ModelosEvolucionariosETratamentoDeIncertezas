@@ -328,13 +328,14 @@ def main():
         print(f'Fitness: {sqrt(solucao.fitness)+1} - Geração: {solucao.geracao}')
         for i in range(8):
             print(solucao.tabuleiro[i])
-            mostrar_solucao(solucao.matriz)
     else:
         print('Não encontrou')
+        solucao = melhores_candidatos[0]
     print(f'Fitness: {melhores_candidatos[0].fitness} - Geração: {melhores_candidatos[0].geracao}')
     print(f'Maior sequência: {melhores_candidatos[0].maior_seq}')
-    for linha in melhores_candidatos[0].matriz:
+    for linha in solucao.matriz:
         print(linha)
+    mostrar_solucao(solucao.matriz)
 
 
 board = Canvas(master, width=599, height=599)
