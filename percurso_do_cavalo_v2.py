@@ -150,7 +150,7 @@ def encontra_solucao():
         print(f'{geracao_atual} - {len(geracoes[geracao_atual-1].populacao)} '
               f'- Média: {str(sqrt(geracoes[geracao_atual-1].media_de_fitness))[:7]} '
               f'- Mutações: {mutacoes[geracao_atual-1]} '
-              f'- Desvio padrão: {str(geracoes[geracao_atual-1].desvio_padrao)[:7]}')
+              f'- Desvio padrão: {str(geracoes[geracao_atual-1].desvio_padrao)[:6]}')
     return None
 
 
@@ -283,20 +283,16 @@ def mutar(matriz, num_ger):
     if geracoes[geracao_atual - 2].desvio_padrao > 5:
         chance_mutacao = CHANCE_MUTAR
     else:
-        chance_mutacao = CHANCE_MUTAR * 33
+        chance_mutacao = CHANCE_MUTAR * 10
     if random() <= chance_mutacao:
         mutacoes[geracao_atual - 1] += 1
         for _ in range(randint(1, 64)):
             tentativas = 0
-            while True:
+            gene1, gene2 = [-1, -1], [-1, -1]
+            while gene1 == gene2:
                 tentativas += 1
                 gene1 = [randint(0, 7), randint(0, 7)]
                 gene2 = [randint(0, 7), randint(0, 7)]
-                if gene1 != gene2:
-                    # m1 = individuo._possui_movimento_valido(individuo.matriz[gene1[0]][gene1[1]])
-                    # m2 = individuo._possui_movimento_valido(individuo.matriz[gene2[0]][gene2[1]])
-                    # if not m1 and not m2 or tentativas == 50:
-                    break
             placeholder = individuo.matriz[gene1[0]][gene1[1]]
             individuo.matriz[gene1[0]][gene1[1]] = individuo.matriz[gene2[0]][gene2[1]]
             individuo.matriz[gene2[0]][gene2[1]] = placeholder
