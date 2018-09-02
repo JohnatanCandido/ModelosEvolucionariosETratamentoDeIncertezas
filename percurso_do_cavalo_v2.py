@@ -56,7 +56,7 @@ class Individuo:
 
     def calc_fitness(self):
         fitness = 0
-        tam_seq = 0
+        tam_seq = 1
         inicial = 1
         for n in range(1, 65):
             if self._possui_movimento_valido(n):
@@ -66,7 +66,7 @@ class Individuo:
                     self.maior_seq = [inicial, n, tam_seq]
                 inicial = n + 1
                 fitness += (tam_seq - 1) ** 2
-                tam_seq = 0
+                tam_seq = 1
         global melhores_candidatos
         if not melhores_candidatos or fitness > melhores_candidatos[0].fitness:
             self.fitness = fitness
@@ -148,8 +148,9 @@ def encontra_solucao():
             if solucao is not None:
                 return solucao
         print(f'{geracao_atual} - {len(geracoes[geracao_atual-1].populacao)} '
-              f'- Média: {sqrt(geracoes[geracao_atual-1].media_de_fitness)} - Mutações: {mutacoes[geracao_atual-1]} '
-              f'- Desvio padrão: {geracoes[geracao_atual-1].desvio_padrao}')
+              f'- Média: {str(sqrt(geracoes[geracao_atual-1].media_de_fitness))[:7]} '
+              f'- Mutações: {mutacoes[geracao_atual-1]} '
+              f'- Desvio padrão: {str(geracoes[geracao_atual-1].desvio_padrao)[:7]}')
     return None
 
 
@@ -223,17 +224,17 @@ def calcula_adjacencias_validas(matriz, i, j):
 
 
 def gera_nova_geracao(geracao):
-    nova_geracao = Geracao(geracao.populacao[:], geracao_atual)
+    nova_geracao = executa_roleta(Geracao(geracao.populacao[:], geracao_atual))
     for ind in nova_geracao.populacao:
         if ind.morreu():
             nova_geracao.populacao.remove(ind)
-    return cruzar(executa_roleta(nova_geracao))
+    return cruzar(nova_geracao)
 
 
 def cruzar(geracao):
     tam_inicial = len(geracao.populacao)
     nao_cruzado = geracao.populacao[:]
-    while len(nao_cruzado) > tam_inicial * 0.15:
+    while len(nao_cruzado) > tam_inicial * 0.30:
         pai_1 = nao_cruzado.pop(randint(0, len(nao_cruzado) - 1))
         pai_2 = nao_cruzado.pop(randint(0, len(nao_cruzado) - 1))
         filho_1 = [0 for _ in range(64)]
@@ -253,6 +254,12 @@ def cruzar(geracao):
         filho_2 = converte_genotipo_matriz(filho_2)
         geracao.populacao.append(mutar(filho_1, geracao.geracao))
         geracao.populacao.append(mutar(filho_2, geracao.geracao))
+    return verifica_superpopulacao(geracao)
+
+
+def verifica_superpopulacao(geracao):
+    if len(geracao.populacao) > TAM_GERACAO_INICIAL * 10:
+        geracao.populacao = geracao.populacao[:TAM_GERACAO_INICIAL]
     return geracao
 
 
@@ -299,23 +306,23 @@ def mutar(matriz, num_ger):
 
 
 def executa_roleta(geracao):
-    if TAM_GERACAO_INICIAL * 10 < len(geracao.populacao):
-        total = geracao.calc_fitness_total()
-        soma = 0
-        roleta = []
-        for ind in geracao.populacao:
-            roleta.append([ind, soma, ind.fitness / total + soma])
-            soma += ind.fitness / total
-        sobreviventes = []
-        while len(sobreviventes) < TAM_GERACAO_INICIAL * 2:
-            numero = random()
-            for r in roleta:
-                if r[1] <= numero <= r[2]:
-                    geracao.populacao.remove(r[0])
-                    roleta.remove(r)
-                    sobreviventes.append(r[0])
-                    break
-        geracao.populacao = sobreviventes if sobreviventes else geracao.populacao
+    total = geracao.calc_fitness_total()
+    soma = 0
+    roleta = []
+    tam_desejado = len(geracao.populacao) * 0.75
+    for ind in geracao.populacao:
+        roleta.append([ind, soma, ind.fitness / total + soma])
+        soma += ind.fitness / total
+    sobreviventes = []
+    while len(sobreviventes) < tam_desejado:
+        numero = random()
+        for r in roleta:
+            if r[1] <= numero <= r[2]:
+                geracao.populacao.remove(r[0])
+                roleta.remove(r)
+                sobreviventes.append(r[0])
+                break
+    geracao.populacao = sobreviventes if sobreviventes else geracao.populacao
     return geracao
 
 
