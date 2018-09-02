@@ -72,7 +72,7 @@ class Individuo:
             self.fitness = fitness
             melhores_candidatos.append(self)
             melhores_candidatos.sort(key=lambda x: x.fitness, reverse=True)
-            print(f'\n> Melhor fitness: {fitness} ({str(int(sqrt(fitness)+1))})\n')
+            print(f'\n> Melhor fitness: {fitness} ({self.maior_seq[2]})\n')
         return fitness
 
     def _possui_movimento_valido(self, n):
