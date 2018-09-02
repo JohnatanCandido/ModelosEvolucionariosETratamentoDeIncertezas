@@ -331,7 +331,7 @@ def main():
             mostrar_solucao(solucao.matriz)
     else:
         print('Não encontrou')
-    print(f'Fitness: {sqrt(melhores_candidatos[0].fitness)+1} - Geração: {melhores_candidatos[0].geracao}')
+    print(f'Fitness: {melhores_candidatos[0].fitness} - Geração: {melhores_candidatos[0].geracao}')
     print(f'Maior sequência: {melhores_candidatos[0].maior_seq}')
     for linha in melhores_candidatos[0].matriz:
         print(linha)
