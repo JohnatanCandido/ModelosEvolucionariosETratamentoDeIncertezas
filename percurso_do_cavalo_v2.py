@@ -192,29 +192,6 @@ def gera_individuo():
                     matriz[i][j] = n
                     break
 
-    '''
-    while n < 64:
-        n += 1
-        movimentos = []
-        for mov in MOVIMENTOS_VALIDOS:
-            if -1 < i + mov[0] < 8 and -1 < j + mov[1] < 8:
-                if matriz[i + mov[0]][j + mov[1]] == 0:
-                    ni = i + mov[0]
-                    nj = j + mov[1]
-                    movimentos.append([ni, nj, calcula_adjacencias_validas(matriz, ni, nj)])
-        if movimentos:
-            movimentos.sort(key=lambda x: x[2], reverse=True)
-            m = movimentos[0]
-            matriz[m[0]][m[1]] = n
-            i = m[0]
-            j = m[1]
-        else:
-            while True:
-                i, j = randint(0, 7), randint(0, 7)
-                if matriz[i][j] == 0:
-                    matriz[i][j] = n
-                    break
-    '''
     return Individuo(geracao_atual, matriz)
 
 
