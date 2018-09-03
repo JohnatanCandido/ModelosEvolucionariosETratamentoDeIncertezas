@@ -1,6 +1,7 @@
 from random import randint, random, shuffle
 from math import sqrt
 from tkinter import Tk, Canvas, W
+import matplotlib.pyplot as plt
 
 master = Tk()
 
@@ -12,6 +13,8 @@ CHANCE_MUTAR = 0.03
 MAX_FITNESS = 63 ** 2
 mutacoes = [0 for _ in range(NUMERO_GERACOES)]
 melhores_candidatos = []
+
+lista_individuos = []
 
 matriz_numeros = [
     [1, 2, 3, 4, 5, 6, 7, 8],
@@ -46,6 +49,7 @@ class Individuo:
         self.fitness = self.calc_fitness()
         self.fitness_real = sqrt(self.fitness)+1
         self.exp_vida = int(self.fitness/350)
+        lista_individuos.append(self)
 
     def cria_genotipo(self):
         vetor = []
@@ -336,10 +340,18 @@ def main():
     for linha in solucao.matriz:
         print(linha)
     mostrar_solucao(solucao.matriz)
+    cria_scatter_plot()
 
 
 board = Canvas(master, width=599, height=599)
 board.grid(row=0, column=0)
+
+
+def cria_scatter_plot():
+    dados = {'geracao': [ind.geracao for ind in lista_individuos],
+             'fitness': [ind.fitness for ind in lista_individuos]}
+    plt.scatter(dados['geracao'], dados['fitness'], alpha=0.2, c=dados['fitness'])
+    plt.show()
 
 
 def mostrar_solucao(matriz):
