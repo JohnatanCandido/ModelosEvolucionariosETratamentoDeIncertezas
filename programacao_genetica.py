@@ -9,10 +9,10 @@ pares = [[1, 0.67], [2, 2], [3, 4], [4, 6.67], [5, 10], [6, 14], [7, 18.67], [8,
 operadores = ['+', '-', '*', '/']
 valores = ['x', '+', '-', '*', '/', 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
 
-num_geracoes = 50
-tam_geracao = 250
-max_profundidade = 6
-chance_mutacao = 0.2
+num_geracoes = 200
+tam_geracao = 50
+max_profundidade = 5
+chance_mutacao = 0.5
 
 
 class Geracao:
@@ -34,7 +34,8 @@ class Geracao:
     def __str__(self):
         return f'{self.geracao} ' \
                f'- Média: {str(self.media_fitness)[:5] if self.media_fitness < MAX_INT else 999999} ' \
-               f'- Melhor: {str(self.melhor.fitness)[:6]} ' \
+               f'- Melhor: {str(self.melhor.fitness)[:6]} - ({self.melhor.funcao}) ' \
+               f'- Pior: {str(self.populacao[-1].fitness)[:7]} - ({self.populacao[-1].funcao}) ' \
                f'- Tamanho: {len(self.populacao)}'
 
 
@@ -125,8 +126,8 @@ def executa_roleta(geracao):
     soma = 0
     roleta = []
     tam_desejado = len(geracao.populacao) * 0.75
-    if len(geracao.populacao) > tam_geracao * 10:
-        tam_desejado = len(geracao.populacao) * 0.10
+    if len(geracao.populacao) > tam_geracao * 5:
+        tam_desejado = len(geracao.populacao) * 0.2
     nova_populacao = geracao.populacao[:]
     for ind in nova_populacao:
         roleta.append([ind, soma, ind.fitness / total + soma])
@@ -183,15 +184,17 @@ def cruzar_individuos(pai, mae, ger):
     retorno = []
     filho_1 = mutar(filho_1.refresh(), ger)
     filho_2 = mutar(filho_2.refresh(), ger)
-    if calc_prof(filho_1) < max_profundidade and filho_1.lista and filho_1.fitness < MAX_INT:
+    if filho_1 is not None and calc_prof(filho_1) < max_profundidade and filho_1.lista and filho_1.fitness < MAX_INT:
         retorno.append(filho_1)
-    if calc_prof(filho_2) < max_profundidade and filho_2.lista and filho_2.fitness < MAX_INT:
+    if filho_2 is not None and calc_prof(filho_2) < max_profundidade and filho_2.lista and filho_2.fitness < MAX_INT:
         retorno.append(filho_2)
 
     return retorno
 
 
 def mutar(ind, ger):
+    if ind.lista == -1:
+        return None
     if random() < chance_mutacao:
         print('.', end='')
         remover = ind.lista[randint(0, len(ind.lista) - 1)]
@@ -226,20 +229,23 @@ def cria_funcao(node, funcao=''):
 
 
 def printa_resultados(ind):
-    print('Num - Obtido - Esperado')
+    print('|-------------------------|')
+    print('| Num | Obtido | Esperado |')
+    print('|-------------------------|')
     num = [par[0] for par in pares]
     esperado = [par[1] for par in pares]
     obtidos = []
     for par in pares:
-        r = eval(ind.funcao.replace('x', str(par[0])))
-        print(f'{par[0]} - {str(r)[:5]} - {par[1]}')
+        r = float(eval(ind.funcao.replace('x', str(par[0]))))
+        print('| {:2d}  | {:6.2f} | {:6.2f}   |'.format(par[0], r, par[1]))
         obtidos.append(r)
+    print('|-------------------------|')
 
     plt.text(1, 30, 'Função: ' + ind.funcao)
     plt.xlabel('Números')
     plt.ylabel('Resultados')
-    plt.plot(num, obtidos, color='red')
-    plt.plot(num, esperado, color='blue')
+    plt.plot(num, obtidos, color='red', marker='o', markerfacecolor='red')
+    plt.plot(num, esperado, color='blue', marker='o', markerfacecolor='blue')
     red_patch = mp.Patch(color='red', label='Resultados Obtidos')
     blue_patch = mp.Patch(color='blue', label='Resultados Esperados')
     plt.legend(handles=[red_patch, blue_patch])
@@ -248,13 +254,18 @@ def printa_resultados(ind):
 
 def main():
     geracoes = []
-    for i in range(num_geracoes):
-        if not geracoes:
-            populacao = cria_populacao(i+1)
-            geracoes.append(Geracao(populacao, i+1))
-        else:
-            geracoes.append(gera_nova_geracao(geracoes[-1], i+1))
-        print(str(geracoes[-1]))
+    try:
+        for i in range(num_geracoes):
+            if not geracoes:
+                populacao = cria_populacao(i+1)
+                geracoes.append(Geracao(populacao, i+1))
+            else:
+                geracoes.append(gera_nova_geracao(geracoes[-1], i+1))
+            if geracoes[-1].melhor.fitness == 0:
+                break
+            print(str(geracoes[-1]))
+    except MemoryError:
+        print('\n\n>>> MEMORY ERROR <<<\n\n')
 
     solucao = sorted(geracoes, key=lambda x: x.melhor.fitness)[0].melhor
 
