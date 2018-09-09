@@ -1,17 +1,7 @@
 from copy import deepcopy
 from math import sqrt
 from random import randint, random
-from tkinter import Tk, Canvas, ttk, Entry
-from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2TkAgg
-from matplotlib.figure import Figure
-import matplotlib
-import matplotlib.pyplot as plt
-import matplotlib.patches as mp
-import tkinter as tk
 
-matplotlib.use("TkAgg")
-
-master = Tk()
 
 MAX_INT = 99**9
 pares = [[1, 0.67], [2, 2], [3, 4], [4, 6.67], [5, 10], [6, 14], [7, 18.67], [8, 24], [9, 30], [10, 36.67]]
@@ -22,18 +12,6 @@ num_geracoes = 250
 tam_geracao = 100
 max_profundidade = 5
 chance_mutacao = 0.5
-
-f = Figure(figsize=(5, 5), dpi=100)
-sp = f.add_subplot(111)
-
-board = Canvas(master, width=800, height=600)
-board.grid(row=0, column=0)
-canvas = FigureCanvasTkAgg(f, board)
-canvas.get_tk_widget().pack(side=tk.RIGHT, fill=tk.BOTH, expand=True)
-dados = ttk.Label(board)
-button = ttk.Button(board, text='Executar', command=lambda: main())
-button.pack()
-dados.pack()
 
 
 class Geracao:
@@ -79,6 +57,12 @@ class Node:
             self.fitness = -1
             self.calc_fitness()
             self.exp_vida = 5  # TODO Criar uma função de expectativa de vida
+
+    def __str__(self):
+        return 'Função: ' + self.funcao + \
+               '\nFitness: ' + str(self.fitness)[:6] + \
+               ' - Profundidade: ' + str(calc_prof(self)) + \
+               '\nGeração: ' + str(self.geracao)
 
     def refaz_raizes(self, raiz):
         self.raiz = raiz
@@ -253,9 +237,13 @@ def cria_funcao(node, funcao=''):
     return str(funcao)
 
 
-def main():
-    dados.config(text='Calculando...')
-    canvas.show()
+def main(num_ger, tam_ger, max_prof, chan_mut):
+    global num_geracoes, tam_geracao, max_profundidade, chance_mutacao
+    num_geracoes = int(num_ger)
+    tam_geracao = int(tam_ger)
+    max_profundidade = int(max_prof)
+    chance_mutacao = float(chan_mut)
+
     geracoes = []
     try:
         for i in range(num_geracoes):
@@ -270,41 +258,8 @@ def main():
     except MemoryError:
         print('\n\n>>> MEMORY ERROR <<<\n\n')
 
-    solucao = sorted(geracoes, key=lambda x: x.melhor.fitness)[0].melhor
-
-    texto = 'Função: ' + solucao.funcao + \
-            '\nProfundidade: ' + str(calc_prof(solucao)) + \
-            '\nFitness: ' + str(solucao.fitness)[:6] + \
-            '\nGeração: ' + str(solucao.geracao)
-    dados.config(text=texto)
-    print(f'\nFunção:  {solucao.funcao}')
-    print(f'Profundidade: {calc_prof(solucao)}')
-    print(f'Fitness: {solucao.fitness}')
-    print(f'Geração: {solucao.geracao}')
-    printa_resultados(solucao)
-
-
-def printa_resultados(ind):
-    print('|-------------------------|')
-    print('| Num | Obtido | Esperado |')
-    print('|-------------------------|')
-    num = [par[0] for par in pares]
-    esperado = [par[1] for par in pares]
-    obtidos = []
-    for par in pares:
-        r = float(eval(ind.funcao.replace('x', str(par[0]))))
-        print('| {:2d}  | {:6.2f} | {:6.2f}   |'.format(par[0], r, par[1]))
-        obtidos.append(r)
-    print('|-------------------------|')
-
-    sp.clear()
-    red_patch = mp.Patch(color='red', label='Resultados Obtidos')
-    blue_patch = mp.Patch(color='blue', label='Resultados Esperados')
-    sp.legend(handles=[red_patch, blue_patch])
-    sp.plot(num, obtidos, color='red', marker='o', markerfacecolor='red')
-    sp.plot(num, esperado, color='blue', marker='o', markerfacecolor='blue')
-    canvas.show()
+    return sorted(geracoes, key=lambda x: x.melhor.fitness)[0].melhor
 
 
 if __name__ == '__main__':
-    master.mainloop()
+    pass
