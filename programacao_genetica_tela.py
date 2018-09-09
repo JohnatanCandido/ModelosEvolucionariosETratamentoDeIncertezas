@@ -80,16 +80,6 @@ resultado.pack(side=tk.LEFT)
 espacador3 = ttk.Label(left_bottom_frame, text='    ')
 espacador3.pack(side=tk.LEFT)
 
-pares = [[1, 0.67], [2, 2], [3, 4], [4, 6.67], [5, 10], [6, 14], [7, 18.67], [8, 24], [9, 30], [10, 36.67]]
-operadores = ['+', '-', '*', '/']
-
-
-def calc_prof(node, left=1, right=1):
-    if node.valor in operadores:
-        left += calc_prof(node.left)
-        right += calc_prof(node.right)
-    return left if left > right else right
-
 
 def executa():
     dados1.config(text='Calculando...')
@@ -105,7 +95,7 @@ def executa():
     dados1.config(text=str(solucao).split(' - ')[0])
     dados2.config(text=str(solucao).split(' - ')[1])
     print(f'\nFunção:  {solucao.funcao}')
-    print(f'Profundidade: {calc_prof(solucao)}')
+    print(f'Profundidade: {pg.calc_prof(solucao)}')
     print(f'Fitness: {solucao.fitness}')
     print(f'Geração: {solucao.geracao}')
     printa_resultados(solucao)
@@ -115,11 +105,11 @@ def printa_resultados(ind):
     print('|-------------------------|')
     print('| Num | Obtido | Esperado |')
     print('|-------------------------|')
-    num = [par[0] for par in pares]
-    esperado = [par[1] for par in pares]
+    num = [par[0] for par in pg.pares]
+    esperado = [par[1] for par in pg.pares]
     obtidos = []
     resultado.delete(*resultado.get_children())
-    for par in pares:
+    for par in pg.pares:
         r = float(eval(ind.funcao.replace('x', str(par[0]))))
         print('| {:2d}  | {:6.2f} | {:6.2f}   |'.format(par[0], r, par[1]))
         resultado.insert('', 'end', text=str(par[0]), values=(str(r)[:5], str(par[1])))
