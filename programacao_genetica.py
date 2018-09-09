@@ -1,18 +1,39 @@
 from copy import deepcopy
 from math import sqrt
 from random import randint, random
+from tkinter import Tk, Canvas, ttk, Entry
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2TkAgg
+from matplotlib.figure import Figure
+import matplotlib
 import matplotlib.pyplot as plt
 import matplotlib.patches as mp
+import tkinter as tk
+
+matplotlib.use("TkAgg")
+
+master = Tk()
 
 MAX_INT = 99**9
 pares = [[1, 0.67], [2, 2], [3, 4], [4, 6.67], [5, 10], [6, 14], [7, 18.67], [8, 24], [9, 30], [10, 36.67]]
 operadores = ['+', '-', '*', '/']
 valores = ['x', '+', '-', '*', '/', 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
 
-num_geracoes = 200
-tam_geracao = 50
+num_geracoes = 250
+tam_geracao = 100
 max_profundidade = 5
 chance_mutacao = 0.5
+
+f = Figure(figsize=(5, 5), dpi=100)
+sp = f.add_subplot(111)
+
+board = Canvas(master, width=800, height=600)
+board.grid(row=0, column=0)
+canvas = FigureCanvasTkAgg(f, board)
+canvas.get_tk_widget().pack(side=tk.RIGHT, fill=tk.BOTH, expand=True)
+dados = ttk.Label(board)
+button = ttk.Button(board, text='Executar', command=lambda: main())
+button.pack()
+dados.pack()
 
 
 class Geracao:
@@ -40,18 +61,18 @@ class Geracao:
 
 
 class Node:
-    def __init__(self, valor, raiz, geracao=-1):
-        self.valor = valor
+    def __init__(self, valor, raiz, profundidade, geracao=-1):
+        self.valor = valor if profundidade <= max_profundidade else valores[randint(5, len(valores) - 1)]
         self.raiz = raiz
+        self.profundidade = profundidade
         if self.valor in operadores:
-            self.left = Node(valores[randint(0, len(valores)-1)], self)
-            self.right = Node(valores[randint(0, len(valores)-1)], self)
+            self.left = Node(valores[randint(0, len(valores)-1)], self, profundidade + 1)
+            self.right = Node(valores[randint(0, len(valores)-1)], self, profundidade + 1)
             if self.left.raiz != self or self.right.raiz != self:
                 raise AssertionError('Q merda velho')
         if self.raiz is None:
             self.geracao = geracao
             self.funcao = cria_funcao(self)
-            self.profundidade = calc_prof(self)
             self.lista = self.cria_lista_nos([])
             if self in self.lista:
                 self.lista.remove(self)
@@ -109,7 +130,8 @@ def cria_populacao(ger):
     populacao = []
     for _ in range(tam_geracao):
         raiz = Node(operadores[randint(0, 3)], None, ger)
-        if calc_prof(raiz) < max_profundidade and raiz.lista and raiz.fitness < MAX_INT:
+        # if calc_prof(raiz) < max_profundidade and raiz.lista and raiz.fitness < MAX_INT:
+        if raiz.lista and raiz.fitness < MAX_INT:
             populacao.append(raiz)
     return populacao
 
@@ -184,8 +206,10 @@ def cruzar_individuos(pai, mae, ger):
     retorno = []
     filho_1 = mutar(filho_1.refresh(), ger)
     filho_2 = mutar(filho_2.refresh(), ger)
+    # if filho_1 is not None and filho_1.lista and filho_1.fitness < MAX_INT:
     if filho_1 is not None and calc_prof(filho_1) < max_profundidade and filho_1.lista and filho_1.fitness < MAX_INT:
         retorno.append(filho_1)
+    # if filho_2 is not None and filho_2.lista and filho_2.fitness < MAX_INT:
     if filho_2 is not None and calc_prof(filho_2) < max_profundidade and filho_2.lista and filho_2.fitness < MAX_INT:
         retorno.append(filho_2)
 
@@ -198,10 +222,11 @@ def mutar(ind, ger):
     if random() < chance_mutacao:
         print('.', end='')
         remover = ind.lista[randint(0, len(ind.lista) - 1)]
-        if remover.raiz.left == remover:
-            remover.raiz.left = Node(valores[randint(0, len(valores)-1)], remover.raiz)
-        elif remover.raiz.right == remover:
-            remover.raiz.right = Node(valores[randint(0, len(valores) - 1)], remover.raiz)
+        raiz = remover.raiz
+        if raiz.left == remover:
+            raiz.left = Node(valores[randint(0, len(valores)-1)], raiz, raiz.profundidade + 1)
+        elif raiz.right == remover:
+            raiz.right = Node(valores[randint(0, len(valores) - 1)], raiz, raiz.profundidade + 1)
         else:
             raise AssertionError('Isso não deveria ter acontecido')
         del remover
@@ -228,31 +253,9 @@ def cria_funcao(node, funcao=''):
     return str(funcao)
 
 
-def printa_resultados(ind):
-    print('|-------------------------|')
-    print('| Num | Obtido | Esperado |')
-    print('|-------------------------|')
-    num = [par[0] for par in pares]
-    esperado = [par[1] for par in pares]
-    obtidos = []
-    for par in pares:
-        r = float(eval(ind.funcao.replace('x', str(par[0]))))
-        print('| {:2d}  | {:6.2f} | {:6.2f}   |'.format(par[0], r, par[1]))
-        obtidos.append(r)
-    print('|-------------------------|')
-
-    plt.text(1, 30, 'Função: ' + ind.funcao)
-    plt.xlabel('Números')
-    plt.ylabel('Resultados')
-    plt.plot(num, obtidos, color='red', marker='o', markerfacecolor='red')
-    plt.plot(num, esperado, color='blue', marker='o', markerfacecolor='blue')
-    red_patch = mp.Patch(color='red', label='Resultados Obtidos')
-    blue_patch = mp.Patch(color='blue', label='Resultados Esperados')
-    plt.legend(handles=[red_patch, blue_patch])
-    plt.show()
-
-
 def main():
+    dados.config(text='Calculando...')
+    canvas.show()
     geracoes = []
     try:
         for i in range(num_geracoes):
@@ -269,6 +272,11 @@ def main():
 
     solucao = sorted(geracoes, key=lambda x: x.melhor.fitness)[0].melhor
 
+    texto = 'Função: ' + solucao.funcao + \
+            '\nProfundidade: ' + str(calc_prof(solucao)) + \
+            '\nFitness: ' + str(solucao.fitness)[:6] + \
+            '\nGeração: ' + str(solucao.geracao)
+    dados.config(text=texto)
     print(f'\nFunção:  {solucao.funcao}')
     print(f'Profundidade: {calc_prof(solucao)}')
     print(f'Fitness: {solucao.fitness}')
@@ -276,5 +284,27 @@ def main():
     printa_resultados(solucao)
 
 
+def printa_resultados(ind):
+    print('|-------------------------|')
+    print('| Num | Obtido | Esperado |')
+    print('|-------------------------|')
+    num = [par[0] for par in pares]
+    esperado = [par[1] for par in pares]
+    obtidos = []
+    for par in pares:
+        r = float(eval(ind.funcao.replace('x', str(par[0]))))
+        print('| {:2d}  | {:6.2f} | {:6.2f}   |'.format(par[0], r, par[1]))
+        obtidos.append(r)
+    print('|-------------------------|')
+
+    sp.clear()
+    red_patch = mp.Patch(color='red', label='Resultados Obtidos')
+    blue_patch = mp.Patch(color='blue', label='Resultados Esperados')
+    sp.legend(handles=[red_patch, blue_patch])
+    sp.plot(num, obtidos, color='red', marker='o', markerfacecolor='red')
+    sp.plot(num, esperado, color='blue', marker='o', markerfacecolor='blue')
+    canvas.show()
+
+
 if __name__ == '__main__':
-    main()
+    master.mainloop()
