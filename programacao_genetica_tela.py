@@ -84,6 +84,8 @@ espacador3.pack(side=tk.LEFT)
 def executa():
     dados1.config(text='Calculando...')
     dados2.config(text='')
+    resultado.delete(*resultado.get_children())
+    sp.clear()
     canvas.show()
 
     ng = num_ger.get() if num_ger.get() != '' else '250'
@@ -108,7 +110,6 @@ def printa_resultados(ind):
     num = [par[0] for par in pg.pares]
     esperado = [par[1] for par in pg.pares]
     obtidos = []
-    resultado.delete(*resultado.get_children())
     for par in pg.pares:
         r = float(eval(ind.funcao.replace('x', str(par[0]))))
         print('| {:2d}  | {:6.2f} | {:6.2f}   |'.format(par[0], r, par[1]))
@@ -116,7 +117,6 @@ def printa_resultados(ind):
         obtidos.append(r)
     print('|-------------------------|')
 
-    sp.clear()
     red_patch = mp.Patch(color='red', label='Resultados Obtidos')
     blue_patch = mp.Patch(color='blue', label='Resultados Esperados')
     sp.legend(handles=[red_patch, blue_patch])

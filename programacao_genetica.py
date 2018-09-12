@@ -5,6 +5,7 @@ from random import randint, random
 
 MAX_INT = 99**9
 pares = [[1, 0.67], [2, 2], [3, 4], [4, 6.67], [5, 10], [6, 14], [7, 18.67], [8, 24], [9, 30], [10, 36.67]]
+# pares = [[i, eval('2*x*x-25*x+80'.replace('x', str(i)))] for i in range(1, 11)]
 operadores = ['+', '-', '*', '/']
 valores = ['x', '+', '-', '*', '/', 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
 
@@ -13,6 +14,8 @@ tam_geracao = 100
 max_profundidade = 5
 chance_mutacao = 0.5
 
+melhores = []
+
 
 class Geracao:
     def __init__(self, populacao, geracao):
@@ -20,6 +23,7 @@ class Geracao:
         self.geracao = geracao
         self.media_fitness = self.calc_media_fitness()
         self.melhor = self.populacao[0]
+        melhores.append(self.populacao[0])
 
     def calc_media_fitness(self):
         return self.calc_fitness_total() / len(self.populacao)
@@ -56,7 +60,8 @@ class Node:
                 self.lista.remove(self)
             self.fitness = -1
             self.calc_fitness()
-            self.exp_vida = 5  # TODO Criar uma função de expectativa de vida
+            self.exp_vida = int(max(-0.15*self.fitness+10, 1))  # TODO Criar uma função de expectativa de vida
+            print(self.exp_vida)
 
     def __str__(self):
         return 'Função: ' + self.funcao + \
@@ -244,21 +249,22 @@ def main(num_ger, tam_ger, max_prof, chan_mut):
     max_profundidade = int(max_prof)
     chance_mutacao = float(chan_mut)
 
-    geracoes = []
+    melhores.clear()
+    geracao = None
     try:
         for i in range(num_geracoes):
-            if not geracoes:
+            if geracao is None:
                 populacao = cria_populacao(i+1)
-                geracoes.append(Geracao(populacao, i+1))
+                geracao = Geracao(populacao, i+1)
             else:
-                geracoes.append(gera_nova_geracao(geracoes[-1], i+1))
-            if geracoes[-1].melhor.fitness == 0:
-                break
-            print(str(geracoes[-1]))
+                geracao = gera_nova_geracao(geracao, i+1)
+            if geracao.melhor.fitness < 0.01:
+                return geracao.melhor
+            print(str(geracao))
     except MemoryError:
         print('\n\n>>> MEMORY ERROR <<<\n\n')
 
-    return sorted(geracoes, key=lambda x: x.melhor.fitness)[0].melhor
+    return sorted(melhores, key=lambda x: x.fitness)[0]
 
 
 if __name__ == '__main__':
