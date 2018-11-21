@@ -5,9 +5,9 @@ from random import randint, random
 
 MAX_INT = 99**9
 pares = [[1, 0.67], [2, 2], [3, 4], [4, 6.67], [5, 10], [6, 14], [7, 18.67], [8, 24], [9, 30], [10, 36.67]]
-# pares = [[i, eval('2*x*x-25*x+80'.replace('x', str(i)))] for i in range(1, 11)]
+# pares = [[i, eval('x*(x+1)/3'.replace('x', str(i)))] for i in range(1, 11)]
 operadores = ['+', '-', '*', '/']
-valores = ['x', '+', '-', '*', '/', 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+valores = ['x', '+', '-', '*', '/'] + [i + 1 for i in range(10)]
 
 num_geracoes = 250
 tam_geracao = 100
@@ -48,20 +48,22 @@ class Node:
         self.raiz = raiz
         self.profundidade = profundidade
         if self.valor in operadores:
-            self.left = Node(valores[randint(0, len(valores)-1)], self, profundidade + 1)
-            self.right = Node(valores[randint(0, len(valores)-1)], self, profundidade + 1)
-            if self.left.raiz != self or self.right.raiz != self:
-                raise AssertionError('Q merda velho')
-        if self.raiz is None:
+            self.left = Node(valores[randint(0, len(valores)-1)], False, profundidade + 1)
+            self.right = Node(valores[randint(0, len(valores)-1)], False, profundidade + 1)
+        if self.raiz:
             self.geracao = geracao
             self.funcao = cria_funcao(self)
             self.lista = self.cria_lista_nos([])
-            if self in self.lista:
-                self.lista.remove(self)
             self.fitness = -1
             self.calc_fitness()
-            self.exp_vida = int(max(-0.15*self.fitness+10, 1))  # TODO Criar uma função de expectativa de vida
-            print(self.exp_vida)
+            self.exp_vida = int(max(-0.15*self.fitness+20, 1))
+
+    def __deepcopy__(self, memodict={}):
+        copy_object = Node(self.valor, self.raiz, self.profundidade)
+        if self.valor in operadores:
+            copy_object.left = deepcopy(self.left)
+            copy_object.right = deepcopy(self.right)
+        return copy_object
 
     def __str__(self):
         return 'Função: ' + self.funcao + \
@@ -69,14 +71,8 @@ class Node:
                ' - Profundidade: ' + str(calc_prof(self)) + \
                '\nGeração: ' + str(self.geracao)
 
-    def refaz_raizes(self, raiz):
-        self.raiz = raiz
-        if self.valor in operadores:
-            self.left.refaz_raizes(self)
-            self.right.refaz_raizes(self)
-
     def cria_lista_nos(self, lista):
-        if self.raiz is not None or self.profundidade < max_profundidade:
+        if not self.raiz or self.profundidade < max_profundidade:
             try:
                 if self.valor in operadores:
                     lista_esquerda = self.left.cria_lista_nos(lista)
@@ -92,10 +88,7 @@ class Node:
         return []
 
     def refresh(self):
-        self.refaz_raizes(None)
         self.lista = self.cria_lista_nos([])
-        if self.lista != -1:
-            self.lista.remove(self)
         self.funcao = cria_funcao(self)
         self.calc_fitness()
         return self
@@ -118,7 +111,7 @@ class Node:
 def cria_populacao(ger):
     populacao = []
     for _ in range(tam_geracao):
-        raiz = Node(operadores[randint(0, 3)], None, ger)
+        raiz = Node(operadores[randint(0, 3)], True, 1, ger)
         # if calc_prof(raiz) < max_profundidade and raiz.lista and raiz.fitness < MAX_INT:
         if raiz.lista and raiz.fitness < MAX_INT:
             populacao.append(raiz)
@@ -155,7 +148,7 @@ def executa_roleta(geracao):
 
 def cruzar_populacao(populacao, num_ger):
     nao_cruzados = populacao[:]
-    max_cruzamento = len(nao_cruzados) * 0.20
+    max_cruzamento = len(nao_cruzados) * 0.5
     while len(nao_cruzados) > max_cruzamento:
         pai = nao_cruzados.pop(randint(0, len(nao_cruzados) - 1))
         mae = nao_cruzados.pop(randint(0, len(nao_cruzados) - 1))
@@ -169,28 +162,28 @@ def cruzar_individuos(pai, mae, ger):
     filho_1 = deepcopy(pai)
     filho_2 = deepcopy(mae)
 
-    gene_1 = filho_1.lista[randint(0, len(filho_1.lista) - 1)]
-    gene_2 = filho_2.lista[randint(0, len(filho_2.lista) - 1)]
+    filho_1.refresh()
+    filho_2.refresh()
 
-    raiz_1 = gene_1.raiz
-    raiz_2 = gene_2.raiz
+    gene_1 = [i for i in filho_1.lista if not i.raiz][randint(0, len(filho_1.lista) - 2)]
+    gene_2 = [i for i in filho_2.lista if not i.raiz][randint(0, len(filho_2.lista) - 2)]
+
+    raiz_1 = [r for r in filho_1.lista if r.valor in operadores and gene_1 in[r.left, r.right]][0]
+    raiz_2 = [r for r in filho_2.lista if r.valor in operadores and gene_2 in[r.left, r.right]][0]
 
     if raiz_2.left == gene_2:
-        gene_2.raiz.left = gene_1
+        raiz_2.left = gene_1
     elif raiz_2.right == gene_2:
-        gene_2.raiz.right = gene_1
+        raiz_2.right = gene_1
     else:
         raise AssertionError('Isso não deveria ter acontecido')
 
     if raiz_1.left == gene_1:
-        gene_1.raiz.left = gene_2
+        raiz_1.left = gene_2
     elif raiz_1.right == gene_1:
-        gene_1.raiz.right = gene_2
+        raiz_1.right = gene_2
     else:
         raise AssertionError('Isso não deveria ter acontecido')
-
-    gene_1.raiz = raiz_2
-    gene_2.raiz = raiz_1
 
     retorno = []
     filho_1 = mutar(filho_1.refresh(), ger)
@@ -210,12 +203,12 @@ def mutar(ind, ger):
         return None
     if random() < chance_mutacao:
         print('.', end='')
-        remover = ind.lista[randint(0, len(ind.lista) - 1)]
-        raiz = remover.raiz
+        remover = [i for i in ind.lista if not i.raiz][randint(0, len(ind.lista) - 2)]
+        raiz = [r for r in ind.lista if r.valor in operadores and remover in[r.left, r.right]][0]
         if raiz.left == remover:
-            raiz.left = Node(valores[randint(0, len(valores)-1)], raiz, raiz.profundidade + 1)
+            raiz.left = Node(valores[randint(0, len(valores)-1)], False, raiz.profundidade + 1)
         elif raiz.right == remover:
-            raiz.right = Node(valores[randint(0, len(valores) - 1)], raiz, raiz.profundidade + 1)
+            raiz.right = Node(valores[randint(0, len(valores) - 1)], False, raiz.profundidade + 1)
         else:
             raise AssertionError('Isso não deveria ter acontecido')
         del remover
@@ -231,13 +224,13 @@ def calc_prof(node, left=1, right=1):
     return left if left > right else right
 
 
-def cria_funcao(node, funcao=''):
+def cria_funcao(node, parenteses=False, funcao=''):
     if node.valor in operadores:
-        funcao += cria_funcao(node.left, funcao)
+        funcao += cria_funcao(node.left, node.valor in['*', '/'] and node.left.valor in ['+', '-'], funcao)
     funcao += str(node.valor)
     if node.valor in operadores:
-        funcao += cria_funcao(node.right)
-    if node.valor in['+', '-'] and node.raiz is not None and node.raiz.valor in['*', '/']:
+        funcao += cria_funcao(node.right, node.valor in['*', '/'] and node.right.valor in ['+', '-'])
+    if parenteses:
         funcao = '(' + funcao + ')'
     return str(funcao)
 

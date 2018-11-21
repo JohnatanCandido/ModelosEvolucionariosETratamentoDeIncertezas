@@ -1,9 +1,9 @@
-from tkinter import Tk, Canvas, ttk, Entry, Frame
-from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2TkAgg
+from tkinter import Tk, ttk, Frame
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.figure import Figure
+from time import time
 import programacao_genetica as pg
 import matplotlib
-import matplotlib.pyplot as plt
 import matplotlib.patches as mp
 import tkinter as tk
 
@@ -82,6 +82,7 @@ espacador3.pack(side=tk.LEFT)
 
 
 def executa():
+    t = time()
     dados1.config(text='Calculando...')
     dados2.config(text='')
     resultado.delete(*resultado.get_children())
@@ -101,6 +102,7 @@ def executa():
     print(f'Fitness: {solucao.fitness}')
     print(f'Geração: {solucao.geracao}')
     printa_resultados(solucao)
+    print('\n\nFinished in %.2f secs.' % (time() - t))
 
 
 def printa_resultados(ind):
