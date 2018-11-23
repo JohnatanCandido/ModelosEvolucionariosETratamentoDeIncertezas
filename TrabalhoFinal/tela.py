@@ -47,6 +47,9 @@ spacer = ttk.Label(bottom_frame)
 spacer.pack(side=tk.TOP)
 
 valores = {}
+labels = {}
+sub_plots = {}
+canvases = {}
 
 
 # =====================================================================================================================
@@ -79,8 +82,9 @@ tabela_regras.column('#1', stretch=tk.NO, minwidth=450, width=450)
 tabela_regras.pack(side=tk.TOP)
 
 
-def adiciona_frame():
-    nome_elemento = valor_nome_elemento.get()
+def adiciona_frame(nome_elemento=None):
+    if nome_elemento is None:
+        nome_elemento = valor_nome_elemento.get()
     if nome_elemento != '':
         controller.add_elemento(nome_elemento)
 
@@ -145,16 +149,24 @@ def adiciona_frame():
         valor_elemento = ttk.Entry(bottom_frame)
         valor_elemento.pack(side=tk.TOP)
 
+        labels[nome_elemento] = label_nome_elemento
         valores[nome_elemento] = valor_elemento
+        sub_plots[nome_elemento] = sp
+        canvases[nome_elemento] = canvas
 
 
 def remove_frame(nome_elemento, frame):
     controller.remove_elemento(nome_elemento)
+    labels[nome_elemento].destroy()
+    valores[nome_elemento].destroy()
     frame.destroy()
 
 
-def add_variavel(elemento, nome, suporte, nucleo, sp, canvas):
-    controller.add_variavel(elemento, nome.get(), suporte.get(), nucleo.get())
+def add_variavel(elemento, nome, suporte, nucleo, sp, canvas, auto=False):
+    if auto:
+        controller.add_variavel(elemento, nome, suporte, nucleo)
+    else:
+        controller.add_variavel(elemento, nome.get(), suporte.get(), nucleo.get())
 
     patches = []
     i = 0
@@ -167,14 +179,19 @@ def add_variavel(elemento, nome, suporte, nucleo, sp, canvas):
     sp.legend(handles=patches)
     canvas.show()
 
-    nome.delete(0, 'end')
-    suporte.delete(0, 'end')
-    nucleo.delete(0, 'end')
+    if not auto:
+        nome.delete(0, 'end')
+        suporte.delete(0, 'end')
+        nucleo.delete(0, 'end')
 
 
-def add_regra():
-    regra = valor_regra.get()
-    res = valor_entao.get()
+def add_regra(regra=None, res=None):
+    if regra is None:
+        regra = valor_regra.get()
+    if ' e ' in regra and ' ou ' in regra:
+        return
+    if res is None:
+        res = valor_entao.get()
 
     controller.regras.append([regra, res])
     tabela_regras.insert('', 'end', text=len(controller.regras), values=['Se ' + regra + ' então ' + res])
@@ -182,4 +199,33 @@ def add_regra():
     valor_entao.delete(0, 'end')
 
 
+def insert_test_values():
+    adiciona_frame('potencia')
+    add_variavel('potencia', 'pouco potente', '0,120', '0,100', sub_plots['potencia'], canvases['potencia'], True)
+    add_variavel('potencia', 'medio', '100,180', '120,160', sub_plots['potencia'], canvases['potencia'], True)
+    add_variavel('potencia', 'potente', '160,220', '180,220', sub_plots['potencia'], canvases['potencia'], True)
+
+    adiciona_frame('peso')
+    add_variavel('peso', 'leve', '0,3000', '0,2500', sub_plots['peso'], canvases['peso'], True)
+    add_variavel('peso', 'medio', '2500,4000', '3000,3600', sub_plots['peso'], canvases['peso'], True)
+    add_variavel('peso', 'pesado', '3600,5000', '4000,5000', sub_plots['peso'], canvases['peso'], True)
+
+    adiciona_frame('aceleração')
+    add_variavel('aceleração', 'lento', '0,15', '0,12', sub_plots['aceleração'], canvases['aceleração'], True)
+    add_variavel('aceleração', 'medio', '12,21', '15,18', sub_plots['aceleração'], canvases['aceleração'], True)
+    add_variavel('aceleração', 'rapido', '19,24', '21,24', sub_plots['aceleração'], canvases['aceleração'], True)
+
+    adiciona_frame('consumo')
+    add_variavel('consumo', 'economico', '10,25', '10,20', sub_plots['consumo'], canvases['consumo'], True)
+    add_variavel('consumo', 'medio', '20,35', '25,30', sub_plots['consumo'], canvases['consumo'], True)
+    add_variavel('consumo', 'não economico', '30,45', '35,45', sub_plots['consumo'], canvases['consumo'], True)
+
+    add_regra('potencia é potente e peso é pesado e aceleração é lento', 'consumo é não economico')
+    add_regra('potencia é pouco potente e peso é leve e aceleração é rapido', 'consumo é economico')
+    add_regra('potencia é pouco potente e peso é pesado e aceleração é medio', 'consumo é medio')
+    add_regra('potencia é potente e peso é medio e aceleração é lento', 'consumo é medio')
+    add_regra('potencia é potente e peso é medio e aceleração é medio', 'consumo é medio')
+
+
+# insert_test_values()
 main.mainloop()
