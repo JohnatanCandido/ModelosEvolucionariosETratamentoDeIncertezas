@@ -3,6 +3,15 @@ class Elemento:
         self.nome = nome
         self.variaveis = {}
 
+    def calcula_resultado(self, x):
+        var, pert = '', 0
+        for variavel in self.variaveis:
+            p = self.variaveis[variavel].retorna_pertinencia(x)
+            if pert < p:
+                var = variavel
+                pert = p
+        return var, pert
+
 
 class Variavel:
     def __init__(self, nome, suporte, nucleo):
@@ -82,7 +91,8 @@ def calcular(valores, label_resultado):
         valor_i = -1
         for var in elementos[resultado].variaveis:
             variavel = elementos[resultado].variaveis[var]
-            if variavel.suporte[0] <= i <= variavel.suporte[1] and valor_i < regras_tratadas[var]:
+            if variavel.suporte[0] <= i <= variavel.suporte[1] \
+                    and valor_i < regras_tratadas[var] <= elementos[resultado].variaveis[var].retorna_pertinencia(i):
                 valor_i = regras_tratadas[var]
         if valor_i > 0:
             if valor_i not in valores:
@@ -96,6 +106,8 @@ def calcular(valores, label_resultado):
         for n in valores[valor]:
             soma += n
         dividendo += (soma*valor)
-    resultado = dividendo / divisor
+    x = dividendo / divisor
 
-    label_resultado.configure(text=resultado)
+    variavel, pertinencia = elementos[resultado].calcula_resultado(x)
+
+    label_resultado.configure(text=variavel + ': ' + str(pertinencia)[:5] + ' (' + str(x)[:5] + ')')

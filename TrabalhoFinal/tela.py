@@ -174,7 +174,7 @@ def add_variavel(elemento, nome, suporte, nucleo, sp, canvas, auto=False):
         variavel = controller.elementos[elemento].variaveis[nome_var]
         patches.append(mp.Patch(color=cores[i], label=variavel.nome))
         x = [variavel.suporte[0], variavel.nucleo[0], variavel.nucleo[1], variavel.suporte[1]]
-        sp.plot(x, [0, 1, 1, 0], color=cores[i], marker='o', markerfacecolor=cores[i])
+        sp.plot(x, [0, 1, 1, 0], color=cores[i])
         i += 1
     sp.legend(handles=patches)
     canvas.show()
@@ -199,7 +199,7 @@ def add_regra(regra=None, res=None):
     valor_entao.delete(0, 'end')
 
 
-def insert_test_values():
+def inserir_valores_exercicio():
     adiciona_frame('potencia')
     add_variavel('potencia', 'pouco potente', '0,120', '0,100', sub_plots['potencia'], canvases['potencia'], True)
     add_variavel('potencia', 'medio', '100,180', '120,160', sub_plots['potencia'], canvases['potencia'], True)
@@ -227,5 +227,35 @@ def insert_test_values():
     add_regra('potencia é potente e peso é medio e aceleração é medio', 'consumo é medio')
 
 
-# insert_test_values()
+def inserir_valores_exemplo():
+    adiciona_frame('QI')
+    add_variavel('QI', 'Baixo', '0,90', '0,49', sub_plots['QI'], canvases['QI'], True)
+    add_variavel('QI', 'Medio', '49,150', '90, 109', sub_plots['QI'], canvases['QI'], True)
+    add_variavel('QI', 'Alto', '109, 200', '150,200', sub_plots['QI'], canvases['QI'], True)
+
+    adiciona_frame('Idade')
+    add_variavel('Idade', 'Jovem', '0,25', '0,18', sub_plots['Idade'], canvases['Idade'], True)
+    add_variavel('Idade', 'Adulto', '18,70', '25, 50', sub_plots['Idade'], canvases['Idade'], True)
+    add_variavel('Idade', 'Idoso', '50,100', '70,100', sub_plots['Idade'], canvases['Idade'], True)
+
+    adiciona_frame('Contratar')
+    add_variavel('Contratar', 'Não', '0,40', '0,15', sub_plots['Contratar'], canvases['Contratar'], True)
+    add_variavel('Contratar', 'Talvez', '15,90', '40, 60', sub_plots['Contratar'], canvases['Contratar'], True)
+    add_variavel('Contratar', 'Sim', '60, 100', '90,100', sub_plots['Contratar'], canvases['Contratar'], True)
+
+    add_regra('QI é Baixo e Idade é Jovem', 'Contratar é Não')
+    add_regra('QI é Medio e Idade é Jovem', 'Contratar é Não')
+    add_regra('QI é Alto e Idade é Jovem', 'Contratar é Talvez')
+
+    add_regra('QI é Baixo e Idade é Adulto', 'Contratar é Não')
+    add_regra('QI é Medio e Idade é Adulto', 'Contratar é Talvez')
+    add_regra('QI é Alto e Idade é Adulto', 'Contratar é Sim')
+
+    add_regra('QI é Baixo e Idade é Idoso', 'Contratar é Não')
+    add_regra('QI é Medio e Idade é Idoso', 'Contratar é Talvez')
+    add_regra('QI é Alto e Idade é Idoso', 'Contratar é Talvez')
+
+
+# inserir_valores_exercicio()
+inserir_valores_exemplo()
 main.mainloop()
